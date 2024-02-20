@@ -3,6 +3,7 @@
 - EntityFramework
 - SignalR
 - Razor
+- Web API for Mobile APP
 Due to the fact that the application is owned by the company for which I created the software, I only attach screenshots from the program and a few individual files with the code. 
 
 
@@ -17,6 +18,8 @@ Due to the fact that the application is owned by the company for which I created
 
 
 # An application supporting a ASP.NET Web App, is a mobile software that allows employees to record their working time only withing the company's territory
+- .NET MAUI
+- using Web API
 You can find this app in App Store and Google Play. The name is: Work-On, with author: Mateusz Woloszynski
 
 ## Recording work time works only, when user is connected to wifi network specified by administrator on the web app
