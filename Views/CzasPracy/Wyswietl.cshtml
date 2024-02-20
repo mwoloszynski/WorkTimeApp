@@ -1,0 +1,243 @@
+﻿@model SP_WorkTimeApp_Website.Models.KartaPracownika
+@using DateTimeExtensions;
+@using DateTimeExtensions.WorkingDays;
+@{
+    ViewData["Title"] = "Karta Pracownika";
+
+}
+<div style="margin-bottom: 50px;">
+<div class="row">
+    <div style="display: flex; flex-wrap: wrap; justify-content: space-between">
+        <h1>@Model.FirstName @Model.LastName</h1>
+        <form id="raportUzytkownika" method="post">
+            <div style="display: flex; margin-top: 10px;">
+                <input type="hidden" name="date1" value="@Model.Miesiac.ToShortDateString()"/>
+                <div class="form-group" style="margin-right: 10px;">
+                    <button type="submit" name="choice" value="raport" class="btn btn-primary" style="margin-left: 10px;  width: 150px; height: 50px;">Raport</button>
+                </div>
+            </div> 
+        </form>
+    </div>
+</div><br />
+
+<div class="calendar">
+    <div class="calendar-month">
+        <ul>
+            <li class="prev"><a asp-area="" asp-controller="CzasPracy" asp-action="Wyswietl" asp-route-year="@Model.Miesiac.Year" asp-route-month="@(Model.Miesiac.Month - 1)" asp-route-id="@Model.Id" style="text-decoration: none; color: white;">&#10094;</a></li>
+            <li class="next"><a asp-area="" asp-controller="CzasPracy" asp-action="Wyswietl" asp-route-year="@Model.Miesiac.Year" asp-route-month="@(Model.Miesiac.Month + 1)" asp-route-id="@Model.Id" style="text-decoration: none; color: white;">&#10095;</a></li>
+            <li>@Model.NazwaMiesiaca<br>
+                <span style="font-size:18px">@Model.Miesiac.Year</span>
+            </li>
+        </ul>
+    </div>
+    <div class="calendar-header">
+        <ul>
+            <li>Pon</li>
+            <li>Wt</li>
+            <li>Śr</li>
+            <li>Czw</li>
+            <li>Pt</li>
+            <li style="color: red">Sob</li>
+            <li style="color: red">Ndz</li>
+        </ul>
+    </div>
+    <div class="calendar-days">
+        <ul>
+        @for(int i=1; i<Model.PierwszyDzienMiesiaca; i++)
+        {
+            <li></li>
+        }
+        @for(int i=1; i<=DateTime.DaysInMonth(Model.Miesiac.Year, Model.Miesiac.Month); i++)
+        {
+            
+            @if(Model.CzasyPracy.Where(x => x.Data.Day == i).Any())
+            {  
+                if(Model.CzasyPracy.Where(x => x.Data.Day == i).FirstOrDefault().IdNieobecnosci == 0) // Nieobecność
+                {
+                    if(Model.CzasyPracy.Where(x => x.Data.Day == i).FirstOrDefault().CzySwieto) // Święto
+                    {
+                        <li style="background-color: #00ff68" onclick="selectitem(this)">
+                            <a style="width: 100%; margin: 0 auto; height: 44px; display: flex; justify-content: center; align-items: center; text-decoration: none; " 
+                             asp-area="" asp-controller="CzasPracy" asp-action="Zmien" asp-route-year="@Model.Miesiac.Year" asp-route-month="@Model.Miesiac.Month" 
+                             asp-route-day="@i" asp-route-id="@Model.Id">
+                                
+                                    <div class="calendar-tooltip" style="color: red;">@i 
+                                    <span style="font-size: 10px; margin-top: -3px; color: gray;">@string.Concat(Model.CzasyPracy.Where(x => x.Data.Day == i).FirstOrDefault().GodzinyPracy, "h")</span>
+                                    </div>
+                                
+                            </a>
+                        </li>
+                    }
+                    else if (Model.CzasyPracy.Where(x => x.Data.Day == i).FirstOrDefault().Data.DayOfWeek == DayOfWeek.Saturday && Model.SobotaNadgodziny == true)
+                    {
+                        <li style="background-color: #24d16b">
+                            <a style="width: 100%; margin: 0 auto; height: 44px; display: flex; justify-content: center; align-items: center; text-decoration: none;"
+                             asp-area="" asp-controller="CzasPracy" asp-action="Zmien" asp-route-year="@Model.Miesiac.Year" asp-route-month="@Model.Miesiac.Month" 
+                             asp-route-day="@i" asp-route-id="@Model.Id">
+                            <div class="calendar-tooltip" style="color: red">@i
+                                <span style="font-size: 10px; margin-top: -3px; color: gray;">@string.Concat(Model.CzasyPracy.Where(x => x.Data.Day == i).FirstOrDefault().GodzinyPracy, "h")</span>
+                            </div>
+                            </a>
+                        </li>
+                    }
+                    else if(Model.CzasyPracy.Where(x => x.Data.Day == i).FirstOrDefault().GodzinyPracy > 8) // Nadgodziny
+                    {
+                        <li style="background-color: #24d16b">
+                            <a style="width: 100%; margin: 0 auto; height: 44px; display: flex; justify-content: center; align-items: center; text-decoration: none;"
+                             asp-area="" asp-controller="CzasPracy" asp-action="Zmien" asp-route-year="@Model.Miesiac.Year" asp-route-month="@Model.Miesiac.Month" 
+                             asp-route-day="@i" asp-route-id="@Model.Id">
+                                @if((Model.PierwszyDzienMiesiaca - 1 + i - 6)%7==0 || (Model.PierwszyDzienMiesiaca - 1 + i - 7)%7==0)
+                                {
+                                    <div class="calendar-tooltip" style="color: red">@i
+                                        <span style="font-size: 10px; margin-top: -3px; color: gray;">@string.Concat(Model.CzasyPracy.Where(x => x.Data.Day == i).FirstOrDefault().GodzinyPracy, "h")</span>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="calendar-tooltip">@i 
+                                        <span style="font-size: 10px; margin-top: -3px; color: gray;">@string.Concat(Model.CzasyPracy.Where(x => x.Data.Day == i).FirstOrDefault().GodzinyPracy, "h")</span>
+                                    </div>
+                                }
+                            </a>
+                        </li>
+                    }
+                    else // Stawka podstawowa
+                    {
+                        <li style="background-color: #50e68e">
+                            <a style="width: 100%; margin: 0 auto; height: 44px; display: flex; justify-content: center; align-items: center; text-decoration: none;"
+                             asp-area="" asp-controller="CzasPracy" asp-action="Zmien" asp-route-year="@Model.Miesiac.Year" asp-route-month="@Model.Miesiac.Month" 
+                             asp-route-day="@i" asp-route-id="@Model.Id">
+                                @if((Model.PierwszyDzienMiesiaca - 1 + i - 6)%7==0 || (Model.PierwszyDzienMiesiaca - 1 + i - 7)%7==0 )
+                                {
+                                    <div class="calendar-tooltip" style="color: red">@i 
+                                    <span style="font-size: 10px; margin-top: -3px; color: gray;">@string.Concat(Model.CzasyPracy.Where(x => x.Data.Day == i).FirstOrDefault().GodzinyPracy, "h")</span>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="calendar-tooltip">@i 
+                                    <span style="font-size: 10px; margin-top: -3px; color: gray;">@string.Concat(Model.CzasyPracy.Where(x => x.Data.Day == i).FirstOrDefault().GodzinyPracy, "h")</span>
+                                    </div>
+                                }
+                            </a>
+                        </li>
+                    }
+                }
+                else // Nieobecność
+                {
+                    <li style="background-color: purple">
+                        <a style="width: 100%; margin: 0 auto; height: 44px; display: flex; justify-content: center; align-items: center; text-decoration: none;"
+                            asp-area="" asp-controller="CzasPracy" asp-action="Zmien" asp-route-year="@Model.Miesiac.Year" asp-route-month="@Model.Miesiac.Month" 
+                            asp-route-day="@i" asp-route-id="@Model.Id">
+
+                            @if(i<10)
+                            {
+                                if(!(Model.Miesiac.Month == 5 && i == 3) && DateTime.ParseExact(string.Concat(Model.Miesiac.Year, "-", Model.Miesiac.Month.ToString("d2"), "-0", i), "yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture).IsHoliday(new WorkingDayCultureInfo("pl-PL")))
+                                {
+                                    <div class="calendar-tooltip" style="color: red">@i 
+                                    <span style="font-size: 10px; margin-top: -3px; color: gray;">@Model.ListaNieobecnosci.Where(x => x.Id == Model.CzasyPracy.Where(x => x.Data.Day == i).FirstOrDefault().IdNieobecnosci).FirstOrDefault().Name</span>
+                                    </div>
+                                }
+                                else if((Model.PierwszyDzienMiesiaca - 1 + i - 6)%7==0 || (Model.PierwszyDzienMiesiaca - 1 + i - 7)%7==0 || (Model.Miesiac.Month == 5 && i == 3))
+                                {
+                            
+                                    <div class="calendar-tooltip" style="color: red">@i 
+                                    <span style="font-size: 10px; margin-top: -3px; color: gray;">@Model.ListaNieobecnosci.Where(x => x.Id == Model.CzasyPracy.Where(x => x.Data.Day == i).FirstOrDefault().IdNieobecnosci).FirstOrDefault().Name</span>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="calendar-tooltip">@i 
+                                    <span style="font-size: 10px; margin-top: -3px; color: gray;">@Model.ListaNieobecnosci.Where(x => x.Id == Model.CzasyPracy.Where(x => x.Data.Day == i).FirstOrDefault().IdNieobecnosci).FirstOrDefault().Name</span>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                if(!(Model.Miesiac.Month == 5 && i == 3) && DateTime.ParseExact(string.Concat(Model.Miesiac.Year, "-", Model.Miesiac.Month.ToString("d2"), "-", i), "yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture).IsHoliday(new WorkingDayCultureInfo("pl-PL")))
+                                {
+                                    <div class="calendar-tooltip" style="color: red">@i 
+                                    <span style="font-size: 10px; margin-top: -3px; color: gray;">@Model.ListaNieobecnosci.Where(x => x.Id == Model.CzasyPracy.Where(x => x.Data.Day == i).FirstOrDefault().IdNieobecnosci).FirstOrDefault().Name</span>
+                                    </div>
+                                }
+                                else if((Model.PierwszyDzienMiesiaca - 1 + i - 6)%7==0 || (Model.PierwszyDzienMiesiaca - 1 + i - 7)%7==0 || (Model.Miesiac.Month == 5 && i == 3))
+                                {
+                            
+                                    <div class="calendar-tooltip" style="color: red">@i 
+                                    <span style="font-size: 10px; margin-top: -3px; color: gray;">@Model.ListaNieobecnosci.Where(x => x.Id == Model.CzasyPracy.Where(x => x.Data.Day == i).FirstOrDefault().IdNieobecnosci).FirstOrDefault().Name</span>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="calendar-tooltip">@i 
+                                    <span style="font-size: 10px; margin-top: -3px; color: gray;">@Model.ListaNieobecnosci.Where(x => x.Id == Model.CzasyPracy.Where(x => x.Data.Day == i).FirstOrDefault().IdNieobecnosci).FirstOrDefault().Name</span>
+                                    </div>
+                                }
+                            }
+
+                        </a>
+                    </li>
+                }
+            }else
+            {
+                <li>
+                    <a style="width: 100%; margin: 0 auto; height: 44px; display: flex; justify-content: center; align-items: center; text-decoration: none; color: #777"
+                     asp-area="" asp-controller="CzasPracy" asp-action="Zmien" asp-route-year="@Model.Miesiac.Year" asp-route-month="@Model.Miesiac.Month" 
+                     asp-route-day="@i" asp-route-id="@Model.Id">
+                        @if(i<10)
+                        {
+                            if(!(Model.Miesiac.Month == 5 && i == 3) && DateTime.ParseExact(string.Concat(Model.Miesiac.Year, "-", Model.Miesiac.Month.ToString("d2"), "-0", i), "yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture).IsHoliday(new WorkingDayCultureInfo("pl-PL")))
+                            {
+                                <div class="calendar-tooltip" style="color: red">@i
+                                </div>
+                            }
+                            else if((Model.PierwszyDzienMiesiaca - 1 + i - 6)%7==0 || (Model.PierwszyDzienMiesiaca - 1 + i - 7)%7==0 || (Model.Miesiac.Month == 5 && i == 3))
+                            {
+                            
+                                <div class="calendar-tooltip" style="color: red">@i
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="calendar-tooltip">@i
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            if(!(Model.Miesiac.Month == 5 && i == 3) && DateTime.ParseExact(string.Concat(Model.Miesiac.Year, "-", Model.Miesiac.Month.ToString("d2"), "-", i), "yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture).IsHoliday(new WorkingDayCultureInfo("pl-PL")))
+                            {
+                                <div class="calendar-tooltip" style="color: red">@i
+                                </div>
+                            }
+                            else if((Model.PierwszyDzienMiesiaca - 1 + i - 6)%7==0 || (Model.PierwszyDzienMiesiaca - 1 + i - 7)%7==0 || (Model.Miesiac.Month == 5 && i == 3))
+                            {
+                            
+                                <div class="calendar-tooltip" style="color: red">@i
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="calendar-tooltip">@i
+                                </div>
+                            }
+                        }
+                    </a>
+                </li>
+            }
+        }
+        @if((DateTime.DaysInMonth(Model.Miesiac.Year, Model.Miesiac.Month) + Model.PierwszyDzienMiesiaca - 1)%7 != 0)
+        for(int i=(DateTime.DaysInMonth(Model.Miesiac.Year, Model.Miesiac.Month) + Model.PierwszyDzienMiesiaca - 1)%7; i<7; i++)
+        {
+            <li></li>
+        }
+        </ul>
+    </div>
+</div>
+<br />
+<h4>Liczba godzin podstawowych (100%): @Model.Godziny100Miesiac</h4>
+<h4>Liczba nadgodzin @string.Concat("(", Model.StawkaNadgodzin, "%):") @Model.Godziny150Miesiac</h4>
+<h4>Liczba godzin świątecznych @string.Concat("(", Model.StawkaSwiateczna, "%):") @Model.Godziny200Miesiac</h4>
+<h4>Liczba dni na L4: @Model.DniL4</h4>
+<h4>Liczba dni na urlopie: @Model.DniUrlop</h4>
+</div>
