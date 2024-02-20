@@ -1,4 +1,8 @@
 # WorkTimeApp - application for counting employee's working time
+- ASP.NET MVC
+- EntityFramework
+- SignalR
+- Razor
 Due to the fact that the application is owned by the company for which I created the software, I only attach screenshots from the program and a few individual files with the code. 
 
 
